@@ -20,8 +20,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"github.com/openkruise/rollouts/pkg/feature"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
+	utilfeature "github.com/openkruise/rollouts/pkg/util/feature"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/openkruise/rollouts/api/v1beta1"
@@ -139,8 +141,9 @@ func (rc *realBatchControlPlane) Finalize() error {
 		return client.IgnoreNotFound(err)
 	}
 
+	keepPaused := rc.release.DeletionTimestamp != nil && utilfeature.DefaultMutableFeatureGate.Enabled(feature.KeepDeploymentPausedOnDeletionGate)
 	// release workload control info and clean up resources if it needs
-	return controller.Finalize(rc.release)
+	return controller.Finalize(rc.release, keepPaused)
 }
 
 func (rc *realBatchControlPlane) SyncWorkloadInformation() (control.WorkloadEventType, *util.WorkloadInfo, error) {

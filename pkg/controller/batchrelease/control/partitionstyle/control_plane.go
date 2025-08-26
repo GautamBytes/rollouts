@@ -30,6 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/openkruise/rollouts/api/v1alpha1"
+	"github.com/openkruise/rollouts/pkg/feature"
+	utilfeature "github.com/openkruise/rollouts/pkg/util/feature"
 	"github.com/openkruise/rollouts/api/v1beta1"
 	"github.com/openkruise/rollouts/pkg/controller/batchrelease/control"
 	"github.com/openkruise/rollouts/pkg/controller/batchrelease/labelpatch"
@@ -144,8 +146,10 @@ func (rc *realBatchControlPlane) Finalize() error {
 		return client.IgnoreNotFound(err)
 	}
 
+	keepPaused := rc.release.DeletionTimestamp != nil && utilfeature.DefaultMutableFeatureGate.Enabled(feature.KeepDeploymentPausedOnDeletionGate)
+
 	// release workload control info and clean up resources if it needs
-	return controller.Finalize(rc.release)
+	return controller.Finalize(rc.release, keepPaused)
 }
 
 func (rc *realBatchControlPlane) SyncWorkloadInformation() (control.WorkloadEventType, *util.WorkloadInfo, error) {
