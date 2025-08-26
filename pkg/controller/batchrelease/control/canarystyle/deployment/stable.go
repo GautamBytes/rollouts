@@ -67,8 +67,8 @@ func (rc *realStableController) Finalize(release *v1beta1.BatchRelease, keepPaus
 		// if batchPartition == nil, workload should be promoted;
 		pause := release.Spec.ReleasePlan.BatchPartition != nil
 		body = fmt.Sprintf(`{"metadata":{"annotations":{"%s":null}},"spec":{"paused":%v}}`,
-		   util.BatchReleaseControlAnnotation, pause)
-		}
+			util.BatchReleaseControlAnnotation, pause)
+	}
 
 	if err := rc.stableClient.Patch(context.TODO(), d, client.RawPatch(types.StrategicMergePatchType, []byte(body))); err != nil {
 		return err
